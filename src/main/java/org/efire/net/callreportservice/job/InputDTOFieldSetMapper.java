@@ -6,9 +6,11 @@ import org.springframework.batch.item.file.transform.FieldSet;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindException;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 /**
  * Created by jongtenerife on 27/07/2017.
@@ -19,7 +21,7 @@ public class InputDTOFieldSetMapper implements FieldSetMapper<InputDTO> {
     @Override
     public InputDTO mapFieldSet(FieldSet fieldSet) throws BindException {
         InputDTO inputDTO = new InputDTO();
-        inputDTO.setCallDate(parsetDate(fieldSet.readString("Date")));
+        inputDTO.setCallDate(parseDate(fieldSet.readString("Date")));
         inputDTO.setCallTime(parseTime(fieldSet.readString("Time")));
         inputDTO.setSource(fieldSet.readInt("Source"));
         inputDTO.setDestination(fieldSet.readLong("Destination"));
@@ -32,8 +34,8 @@ public class InputDTOFieldSetMapper implements FieldSetMapper<InputDTO> {
         return inputDTO;
     }
 
-    private LocalDate parsetDate(String dateAsString) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyy");
+    private LocalDate parseDate(String dateAsString) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault());
         LocalDate date = LocalDate.parse(dateAsString, formatter);
         return date;
     }

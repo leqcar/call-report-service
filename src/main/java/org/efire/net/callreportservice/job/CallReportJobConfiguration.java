@@ -30,6 +30,7 @@ import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 
 /**
@@ -38,6 +39,8 @@ import java.time.LocalTime;
 @Configuration
 @EnableBatchProcessing
 public class CallReportJobConfiguration {
+
+    public static final String INPUT_FILE = "input-call_Min.csv";
 
     @Bean
     public Job callReportJob(JobBuilderFactory jbf) {
@@ -76,16 +79,15 @@ public class CallReportJobConfiguration {
             public Object mapRow(ResultSet rs, int i) throws SQLException {
                 SourceCallLog sourceCallLog = new SourceCallLog();
                 sourceCallLog.setSource(rs.getInt("SOURCE"));
-                Integer hh = rs.getInt("HH");
-                Integer mm = rs.getInt("MM");
-                Integer ss = rs.getInt("SS");
-                sourceCallLog.setDuration(LocalTime.of(hh, mm, ss));
+                sourceCallLog.setHours(rs.getInt("HH"));
+                sourceCallLog.setMinutes(rs.getInt("MM"));
+                sourceCallLog.setSeconds(rs.getInt("SS"));
                 return sourceCallLog;
             }
         });
-        reader.setSql("SELECT SOURCE, HH, MM, SS " +
+        reader.setSql("SELECT RPT_DATE, SOURCE, SUM(HH) as HH, SUM(MM) as MM, SUM(SS) as SS " +
                 " FROM CALL_LOGS " +
-                " WHERE SOURCE IN (302, 309) " +
+                " GROUP BY RPT_DATE, SOURCE " +
                 " ORDER BY SOURCE");
         return reader;
 
@@ -103,7 +105,7 @@ public class CallReportJobConfiguration {
     @Bean
     public ItemReader<InputDTO> inputFileReader() {
         FlatFileItemReader<InputDTO> reader = new FlatFileItemReader<>();
-        reader.setResource(new ClassPathResource("input-call_Min.csv"));
+        reader.setResource(new ClassPathResource(INPUT_FILE));
         reader.setLinesToSkip(1);
         reader.setLineMapper(inputDTOLineMapper());
         reader.setEncoding(StandardCharsets.UTF_8.toString());

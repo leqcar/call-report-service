@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemWriter;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,23 +20,19 @@ public class DummyWriter implements ItemWriter<SourceCallLog> {
     @Override
     public void write(List<? extends SourceCallLog> list) throws Exception {
         List<LocalTime> durations = new ArrayList<>();
-        for (SourceCallLog log :list
-             ) {
-            LOG.info(log.toString());
-            durations.add(log.getDuration());
+        for (SourceCallLog log :list) {
+            LocalTime initTime = LocalTime.of(00,00,00);
+/*            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String callDate = sdf.format(log.getReportDate());*/
+            LOG.info(String.format(" Source: %s", log.getSource()));
+            LOG.info(String.format("\tHours: %s", log.getHours()));
+            LOG.info(String.format("\tMinutes: %s", log.getMinutes()));
+            LOG.info(String.format("\tSeconds: %s", log.getSeconds()));
+            String msg = "\tTotal duration of %s";
+            LOG.info(String.format(msg,
+                    initTime.plusHours(log.getHours())
+                            .plusMinutes(log.getMinutes())
+                            .plusSeconds(log.getSeconds())));
         }
-        LocalTime initTime = LocalTime.of(00,00,00);
-        int h=0;
-        int m=0;
-        int s=0;
-        for (LocalTime d: durations
-             ) {
-            h = h + d.getHour();
-            m = m + d.getMinute();
-            s = s + d.getSecond();
-        }
-
-        LocalTime newTime  = initTime.plusHours(h).plusMinutes(m).plusSeconds(s);
-        System.out.println("NEW TIME : "+newTime);
     }
 }
