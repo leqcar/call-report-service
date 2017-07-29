@@ -12,21 +12,32 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.ItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
+import org.springframework.batch.item.file.FlatFileHeaderCallback;
 import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.LineMapper;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.mapping.FieldSetMapper;
+import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
+import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.file.transform.FieldExtractor;
 import org.springframework.batch.item.support.PassThroughItemProcessor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import javax.sql.DataSource;
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,7 +51,7 @@ import java.time.LocalTime;
 @EnableBatchProcessing
 public class CallReportJobConfiguration {
 
-    public static final String INPUT_FILE = "input-call_Min.csv";
+    public static final String INPUT_FILE = "input-call.csv";
 
     @Bean
     public Job callReportJob(JobBuilderFactory jbf) {
@@ -65,8 +76,8 @@ public class CallReportJobConfiguration {
         return sbf.get("sourceCallDurationStep")
                 .<SourceCallLog, SourceCallLog>chunk(1000)
                 .reader(callLogBySourceReader(null))
-                .processor(new PassThroughItemProcessor<>())
-                .writer(dummyWriter())
+                .processor(new CallLogProcessor())
+                .writer(reportOutputWriter(null))
                 .build();
     }
 
@@ -85,9 +96,9 @@ public class CallReportJobConfiguration {
                 return sourceCallLog;
             }
         });
-        reader.setSql("SELECT RPT_DATE, SOURCE, SUM(HH) as HH, SUM(MM) as MM, SUM(SS) as SS " +
+        reader.setSql("SELECT SOURCE, SUM(HH) as HH, SUM(MM) as MM, SUM(SS) as SS " +
                 " FROM CALL_LOGS " +
-                " GROUP BY RPT_DATE, SOURCE " +
+                " GROUP BY SOURCE " +
                 " ORDER BY SOURCE");
         return reader;
 
@@ -97,6 +108,31 @@ public class CallReportJobConfiguration {
     public ItemProcessor<SourceCallLog, SourceCallLog> callLogProcessor() {
         return new CallLogProcessor();
     }
+
+    @Bean
+    public ItemWriter<SourceCallLog> reportOutputWriter(@Value("${file.location.output}") String outputPath) {
+        FlatFileItemWriter<SourceCallLog> writer = new FlatFileItemWriter<>();
+        writer.setResource(new FileSystemResource(new File(outputPath)));
+        writer.setEncoding(StandardCharsets.UTF_8.toString());
+        writer.setLineAggregator(new DelimitedLineAggregator() {
+            {
+                setDelimiter(",");
+                setFieldExtractor(new BeanWrapperFieldExtractor() {
+                    {
+                        setNames(new String[]{"source", "duration"});
+                    }
+                });
+            }
+        });
+        writer.setHeaderCallback(new FlatFileHeaderCallback() {
+            @Override
+            public void writeHeader(Writer writer) throws IOException {
+                writer.write("Source, Total Duration");
+            }
+        });
+        return writer;
+    }
+
 
     @Bean
     public ItemWriter<SourceCallLog> dummyWriter() {

@@ -22,12 +22,10 @@ public class DummyWriter implements ItemWriter<SourceCallLog> {
         List<LocalTime> durations = new ArrayList<>();
         for (SourceCallLog log :list) {
             LocalTime initTime = LocalTime.of(00,00,00);
-/*            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            String callDate = sdf.format(log.getReportDate());*/
             LOG.info(String.format(" Source: %s", log.getSource()));
-            LOG.info(String.format("\tHours: %s", log.getHours()));
-            LOG.info(String.format("\tMinutes: %s", log.getMinutes()));
-            LOG.info(String.format("\tSeconds: %s", log.getSeconds()));
+            LOG.debug(String.format("\tHours: %s", log.getHours()));
+            LOG.debug(String.format("\tMinutes: %s", log.getMinutes()));
+            LOG.debug(String.format("\tSeconds: %s", log.getSeconds()));
             String msg = "\tTotal duration of %s";
             LOG.info(String.format(msg,
                     initTime.plusHours(log.getHours())

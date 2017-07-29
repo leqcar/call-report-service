@@ -11,3 +11,8 @@ logging:
     root: INFO
     com.aiglr.alip: INFO
     org.springframework: ERROR
+
+file:
+  location:
+    input:
+    output: ../output/output.csv
