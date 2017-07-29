@@ -11,8 +11,9 @@ logging:
     root: INFO
     com.aiglr.alip: INFO
     org.springframework: ERROR
+    org.springframework.batch: INFO
 
 file:
   location:
-    input:
+    input: /Users/jongtenerife/git/call-report-service/src/main/resources/input-call_20170726.csv
     output: ../output/output.csv

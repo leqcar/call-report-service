@@ -2,8 +2,8 @@ package org.efire.net.callreportservice.model;
 
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Date;
 
 /**
  * Created by jongtenerife on 26/07/2017.
@@ -15,7 +15,7 @@ import java.time.LocalTime;
 @EqualsAndHashCode
 public class InputDTO {
 
-    private LocalDate callDate;
+    private Date callDate;
     private LocalTime callTime;
     private Integer source;
     private Long destination;

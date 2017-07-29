@@ -6,11 +6,11 @@ import org.springframework.batch.item.file.transform.FieldSet;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindException;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
+import java.util.Date;
 
 /**
  * Created by jongtenerife on 27/07/2017.
@@ -19,7 +19,7 @@ import java.util.Locale;
 public class InputDTOFieldSetMapper implements FieldSetMapper<InputDTO> {
 
     @Override
-    public InputDTO mapFieldSet(FieldSet fieldSet) throws BindException {
+    public InputDTO mapFieldSet(FieldSet fieldSet) throws BindException{
         InputDTO inputDTO = new InputDTO();
         inputDTO.setCallDate(parseDate(fieldSet.readString("Date")));
         inputDTO.setCallTime(parseTime(fieldSet.readString("Time")));
@@ -34,10 +34,17 @@ public class InputDTOFieldSetMapper implements FieldSetMapper<InputDTO> {
         return inputDTO;
     }
 
-    private LocalDate parseDate(String dateAsString) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault());
-        LocalDate date = LocalDate.parse(dateAsString, formatter);
-        return date;
+    private Date parseDate(String dateAsString) {
+        //DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
+        //LocalDate dt = LocalDate.parse(dateAsString, formatter);
+        Date dt = null;
+        try {
+            dt = sdf.parse(dateAsString);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+        return dt;
     }
 
     private LocalTime parseTime(String dateAsString) {

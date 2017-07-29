@@ -2,7 +2,6 @@ package org.efire.net.callreportservice.job;
 
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Date;
 
@@ -15,7 +14,7 @@ import java.util.Date;
 @ToString
 @EqualsAndHashCode
 public class SourceCallLog {
-
+    private Date reportDate;
     private Integer source;
     private LocalTime duration;
     private Integer hours;

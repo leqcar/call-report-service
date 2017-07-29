@@ -9,10 +9,8 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.ItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
-import org.springframework.batch.item.file.FlatFileHeaderCallback;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.LineMapper;
@@ -22,27 +20,16 @@ import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
 import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.batch.item.file.transform.FieldExtractor;
-import org.springframework.batch.item.support.PassThroughItemProcessor;
+import org.springframework.batch.item.file.transform.LineAggregator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import javax.sql.DataSource;
 import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.time.LocalTime;
 
 /**
  * Created by jongtenerife on 26/07/2017.
@@ -51,7 +38,10 @@ import java.time.LocalTime;
 @EnableBatchProcessing
 public class CallReportJobConfiguration {
 
-    public static final String INPUT_FILE = "input-call.csv";
+    @Value("${file.location.input}")
+    private String inputFile;
+
+    //private static final String INPUT_FILE = "input-call.csv";
 
     @Bean
     public Job callReportJob(JobBuilderFactory jbf) {
@@ -76,7 +66,7 @@ public class CallReportJobConfiguration {
         return sbf.get("sourceCallDurationStep")
                 .<SourceCallLog, SourceCallLog>chunk(1000)
                 .reader(callLogBySourceReader(null))
-                .processor(new CallLogProcessor())
+                .processor(callLogProcessor())
                 .writer(reportOutputWriter(null))
                 .build();
     }
@@ -85,21 +75,19 @@ public class CallReportJobConfiguration {
     public ItemReader<? extends SourceCallLog> callLogBySourceReader(DataSource ds) {
         JdbcCursorItemReader reader = new JdbcCursorItemReader();
         reader.setDataSource(ds);
-        reader.setRowMapper(new RowMapper() {
-            @Override
-            public Object mapRow(ResultSet rs, int i) throws SQLException {
-                SourceCallLog sourceCallLog = new SourceCallLog();
-                sourceCallLog.setSource(rs.getInt("SOURCE"));
-                sourceCallLog.setHours(rs.getInt("HH"));
-                sourceCallLog.setMinutes(rs.getInt("MM"));
-                sourceCallLog.setSeconds(rs.getInt("SS"));
-                return sourceCallLog;
-            }
+        reader.setRowMapper((rs, i) -> {
+            SourceCallLog sourceCallLog = new SourceCallLog();
+            sourceCallLog.setReportDate(rs.getDate("RPT_DATE"));
+            sourceCallLog.setSource(rs.getInt("SOURCE"));
+            sourceCallLog.setHours(rs.getInt("HH"));
+            sourceCallLog.setMinutes(rs.getInt("MM"));
+            sourceCallLog.setSeconds(rs.getInt("SS"));
+            return sourceCallLog;
         });
-        reader.setSql("SELECT SOURCE, SUM(HH) as HH, SUM(MM) as MM, SUM(SS) as SS " +
+        reader.setSql("SELECT RPT_DATE, SOURCE, SUM(HH) as HH, SUM(MM) as MM, SUM(SS) as SS " +
                 " FROM CALL_LOGS " +
-                " GROUP BY SOURCE " +
-                " ORDER BY SOURCE");
+                " GROUP BY RPT_DATE, SOURCE " +
+                " ORDER BY RPT_DATE DESC, SOURCE");
         return reader;
 
     }
@@ -114,25 +102,21 @@ public class CallReportJobConfiguration {
         FlatFileItemWriter<SourceCallLog> writer = new FlatFileItemWriter<>();
         writer.setResource(new FileSystemResource(new File(outputPath)));
         writer.setEncoding(StandardCharsets.UTF_8.toString());
-        writer.setLineAggregator(new DelimitedLineAggregator() {
-            {
-                setDelimiter(",");
-                setFieldExtractor(new BeanWrapperFieldExtractor() {
-                    {
-                        setNames(new String[]{"source", "duration"});
-                    }
-                });
-            }
-        });
-        writer.setHeaderCallback(new FlatFileHeaderCallback() {
-            @Override
-            public void writeHeader(Writer writer) throws IOException {
-                writer.write("Source, Total Duration");
-            }
-        });
+        writer.setLineAggregator(reportOutputLineAggregator());
+        writer.setHeaderCallback(writer1 -> writer1.write("Report Date, Source, Total Duration"));
         return writer;
     }
 
+    private LineAggregator<SourceCallLog> reportOutputLineAggregator() {
+        DelimitedLineAggregator lineAggregator = new DelimitedLineAggregator();
+        lineAggregator.setDelimiter(",");
+        lineAggregator.setFieldExtractor(new BeanWrapperFieldExtractor() {
+            {
+                setNames(new String[]{"reportDate","source", "duration"});
+            }
+        });
+        return  lineAggregator;
+    }
 
     @Bean
     public ItemWriter<SourceCallLog> dummyWriter() {
@@ -141,7 +125,8 @@ public class CallReportJobConfiguration {
     @Bean
     public ItemReader<InputDTO> inputFileReader() {
         FlatFileItemReader<InputDTO> reader = new FlatFileItemReader<>();
-        reader.setResource(new ClassPathResource(INPUT_FILE));
+        //reader.setResource(new ClassPathResource(INPUT_FILE)); -->used to test using csv file in the classpath
+        reader.setResource(new FileSystemResource(new File(inputFile)));
         reader.setLinesToSkip(1);
         reader.setLineMapper(inputDTOLineMapper());
         reader.setEncoding(StandardCharsets.UTF_8.toString());
@@ -175,12 +160,7 @@ public class CallReportJobConfiguration {
         writer.setDataSource(ds);
         writer.setSql("INSERT INTO CALL_LOGS (RPT_DATE,CALL_TIME,SOURCE,DESTINATION,HH, MM, SS) " +
                 "VALUES (:callDate, :callTime, :source, :destination, :hours, :minutes, :seconds)");
-        writer.setItemSqlParameterSourceProvider(new ItemSqlParameterSourceProvider<InputDTO>() {
-            @Override
-            public SqlParameterSource createSqlParameterSource(InputDTO inputDTO) {
-                return new BeanPropertySqlParameterSource(inputDTO);
-            }
-        });
+        writer.setItemSqlParameterSourceProvider(inputDTO -> new BeanPropertySqlParameterSource(inputDTO));
         return writer;
     }
 
