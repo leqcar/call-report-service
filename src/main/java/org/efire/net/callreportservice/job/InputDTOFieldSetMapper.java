@@ -1,6 +1,6 @@
 package org.efire.net.callreportservice.job;
 
-import org.efire.net.callreportservice.model.InputDTO;
+import org.efire.net.callreportservice.model.CallLog;
 import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.FieldSet;
 import org.springframework.stereotype.Component;
@@ -16,11 +16,11 @@ import java.util.Date;
  * Created by jongtenerife on 27/07/2017.
  */
 @Component
-public class InputDTOFieldSetMapper implements FieldSetMapper<InputDTO> {
+public class InputDTOFieldSetMapper implements FieldSetMapper<CallLog> {
 
     @Override
-    public InputDTO mapFieldSet(FieldSet fieldSet) throws BindException{
-        InputDTO inputDTO = new InputDTO();
+    public CallLog mapFieldSet(FieldSet fieldSet) throws BindException{
+        CallLog inputDTO = new CallLog();
         inputDTO.setCallDate(parseDate(fieldSet.readString("Date")));
         inputDTO.setCallTime(parseTime(fieldSet.readString("Time")));
         inputDTO.setSource(fieldSet.readInt("Source"));

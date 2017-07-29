@@ -6,21 +6,18 @@ import java.time.LocalTime;
 import java.util.Date;
 
 /**
- * Created by jongtenerife on 26/07/2017.
+ * Created by jongtenerife on 27/07/2017.
  */
 @NoArgsConstructor
 @Getter
 @Setter
 @ToString
 @EqualsAndHashCode
-public class InputDTO {
-
-    private Date callDate;
-    private LocalTime callTime;
+public class CallReport {
+    private Date reportDate;
     private Integer source;
-    private Long destination;
+    private LocalTime duration;
     private Integer hours;
     private Integer minutes;
     private Integer seconds;
-
 }

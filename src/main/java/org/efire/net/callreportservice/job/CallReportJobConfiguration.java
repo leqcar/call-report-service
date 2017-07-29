@@ -1,6 +1,7 @@
 package org.efire.net.callreportservice.job;
 
-import org.efire.net.callreportservice.model.InputDTO;
+import org.efire.net.callreportservice.model.CallLog;
+import org.efire.net.callreportservice.model.CallReport;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -55,7 +56,7 @@ public class CallReportJobConfiguration {
     @Bean
     public Step inputFileToDBStep(StepBuilderFactory sbf) {
         return sbf.get("inputFileStep")
-                .<InputDTO, InputDTO>chunk(1000)
+                .<CallLog, CallLog>chunk(1000)
                 .reader(inputFileReader())
                 .writer(jdbcCallLogWriter(null))
                 .build();
@@ -64,7 +65,7 @@ public class CallReportJobConfiguration {
     @Bean
     public Step sourceCallDurationStep(StepBuilderFactory sbf) {
         return sbf.get("sourceCallDurationStep")
-                .<SourceCallLog, SourceCallLog>chunk(1000)
+                .<CallReport, CallReport>chunk(1000)
                 .reader(callLogBySourceReader(null))
                 .processor(callLogProcessor())
                 .writer(reportOutputWriter(null))
@@ -72,11 +73,11 @@ public class CallReportJobConfiguration {
     }
 
     @Bean
-    public ItemReader<? extends SourceCallLog> callLogBySourceReader(DataSource ds) {
+    public ItemReader<? extends CallReport> callLogBySourceReader(DataSource ds) {
         JdbcCursorItemReader reader = new JdbcCursorItemReader();
         reader.setDataSource(ds);
         reader.setRowMapper((rs, i) -> {
-            SourceCallLog sourceCallLog = new SourceCallLog();
+            CallReport sourceCallLog = new CallReport();
             sourceCallLog.setReportDate(rs.getDate("RPT_DATE"));
             sourceCallLog.setSource(rs.getInt("SOURCE"));
             sourceCallLog.setHours(rs.getInt("HH"));
@@ -93,13 +94,13 @@ public class CallReportJobConfiguration {
     }
 
     @Bean
-    public ItemProcessor<SourceCallLog, SourceCallLog> callLogProcessor() {
+    public ItemProcessor<CallReport, CallReport> callLogProcessor() {
         return new CallLogProcessor();
     }
 
     @Bean
-    public ItemWriter<SourceCallLog> reportOutputWriter(@Value("${file.location.output}") String outputPath) {
-        FlatFileItemWriter<SourceCallLog> writer = new FlatFileItemWriter<>();
+    public ItemWriter<CallReport> reportOutputWriter(@Value("${file.location.output}") String outputPath) {
+        FlatFileItemWriter<CallReport> writer = new FlatFileItemWriter<>();
         writer.setResource(new FileSystemResource(new File(outputPath)));
         writer.setEncoding(StandardCharsets.UTF_8.toString());
         writer.setLineAggregator(reportOutputLineAggregator());
@@ -107,7 +108,7 @@ public class CallReportJobConfiguration {
         return writer;
     }
 
-    private LineAggregator<SourceCallLog> reportOutputLineAggregator() {
+    private LineAggregator<CallReport> reportOutputLineAggregator() {
         DelimitedLineAggregator lineAggregator = new DelimitedLineAggregator();
         lineAggregator.setDelimiter(",");
         lineAggregator.setFieldExtractor(new BeanWrapperFieldExtractor() {
@@ -119,12 +120,12 @@ public class CallReportJobConfiguration {
     }
 
     @Bean
-    public ItemWriter<SourceCallLog> dummyWriter() {
+    public ItemWriter<CallReport> dummyWriter() {
         return new DummyWriter();
     }
     @Bean
-    public ItemReader<InputDTO> inputFileReader() {
-        FlatFileItemReader<InputDTO> reader = new FlatFileItemReader<>();
+    public ItemReader<CallLog> inputFileReader() {
+        FlatFileItemReader<CallLog> reader = new FlatFileItemReader<>();
         //reader.setResource(new ClassPathResource(INPUT_FILE)); -->used to test using csv file in the classpath
         reader.setResource(new FileSystemResource(new File(inputFile)));
         reader.setLinesToSkip(1);
@@ -133,15 +134,15 @@ public class CallReportJobConfiguration {
         return reader;
     }
 
-    private LineMapper<InputDTO> inputDTOLineMapper() {
-        DefaultLineMapper<InputDTO> lineMapper = new DefaultLineMapper<>();
+    private LineMapper<CallLog> inputDTOLineMapper() {
+        DefaultLineMapper<CallLog> lineMapper = new DefaultLineMapper<>();
         DelimitedLineTokenizer lineTokenizer = new DelimitedLineTokenizer(",");
         lineTokenizer.setStrict(false);
         lineTokenizer.setNames(new String[]{ "Date", "Time", "Source", "Destination", "Duration" });
         lineTokenizer.setIncludedFields(new int[]{0,1,2,3,4});
 
-        BeanWrapperFieldSetMapper<InputDTO> fieldSetMapper = new BeanWrapperFieldSetMapper<>();
-        fieldSetMapper.setTargetType(InputDTO.class);
+        BeanWrapperFieldSetMapper<CallLog> fieldSetMapper = new BeanWrapperFieldSetMapper<>();
+        fieldSetMapper.setTargetType(CallLog.class);
 
         lineMapper.setLineTokenizer(lineTokenizer);
         lineMapper.setFieldSetMapper(inputDTOFieldSetMapper());
@@ -150,13 +151,13 @@ public class CallReportJobConfiguration {
     }
 
     @Bean
-    public FieldSetMapper<InputDTO> inputDTOFieldSetMapper() {
+    public FieldSetMapper<CallLog> inputDTOFieldSetMapper() {
         return new InputDTOFieldSetMapper();
     }
 
     @Bean
-    public ItemWriter<InputDTO> jdbcCallLogWriter(DataSource ds) {
-        JdbcBatchItemWriter<InputDTO> writer = new JdbcBatchItemWriter<>();
+    public ItemWriter<CallLog> jdbcCallLogWriter(DataSource ds) {
+        JdbcBatchItemWriter<CallLog> writer = new JdbcBatchItemWriter<>();
         writer.setDataSource(ds);
         writer.setSql("INSERT INTO CALL_LOGS (RPT_DATE,CALL_TIME,SOURCE,DESTINATION,HH, MM, SS) " +
                 "VALUES (:callDate, :callTime, :source, :destination, :hours, :minutes, :seconds)");

@@ -1,24 +1,26 @@
 package org.efire.net.callreportservice.model;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
-import java.time.LocalDate;
-import java.util.List;
+import java.time.LocalTime;
+import java.util.Date;
 
 /**
  * Created by jongtenerife on 26/07/2017.
  */
 @NoArgsConstructor
 @Getter
+@Setter
 @ToString
 @EqualsAndHashCode
 public class CallLog {
 
-    private LocalDate callDate;
-    private SourceId sourceId;
-    private List<CallDuration> callDurations;
+    private Date callDate;
+    private LocalTime callTime;
+    private Integer source;
+    private Long destination;
+    private Integer hours;
+    private Integer minutes;
+    private Integer seconds;
 
 }
