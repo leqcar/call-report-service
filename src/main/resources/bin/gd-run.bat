@@ -7,5 +7,5 @@ IF ["%JAVA_HOME%"] EQU [""] (
 	set JAVA="%JAVA_HOME%/bin/java"
 )
 
-set FILE_PATH=$1
+set FILE_PATH=%1
 %JAVA% -Xms256M -Xmx1024M -jar -Dfile.location.input=%FILE_PATH% ../lib/call-report-service.jar
