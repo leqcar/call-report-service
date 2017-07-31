@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 
@@ -44,8 +43,8 @@ public class CallDetailRecordConfiguration {
 
     @Value("${file.location.input}")
     private String inputFile;
-
-    private static final String INPUT_FILE = "input-call-min-cdr.csv";
+    //Use for testing
+    //private static final String INPUT_FILE = "input-call-min-cdr.csv";
 
     @Bean
     public Job callDetailJob(JobBuilderFactory jbf) {
@@ -67,8 +66,8 @@ public class CallDetailRecordConfiguration {
     @Bean
     public ItemReader<CallLog> inputFileReader() {
         FlatFileItemReader<CallLog> reader = new FlatFileItemReader<>();
-        reader.setResource(new ClassPathResource(INPUT_FILE)); //-->used to test using csv file in the classpath
-       // reader.setResource(new FileSystemResource(new File(inputFile)));
+        //reader.setResource(new ClassPathResource(INPUT_FILE)); //-->used to test using csv file in the classpath
+        reader.setResource(new FileSystemResource(new File(inputFile)));
         reader.setLinesToSkip(1);
         reader.setLineMapper(callDetailRecordLineMapper());
         reader.setEncoding(StandardCharsets.UTF_8.toString());

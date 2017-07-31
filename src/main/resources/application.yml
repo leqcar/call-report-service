@@ -17,6 +17,6 @@ logging:
 
 file:
   location:
-    input: /Users/jongtenerife/git/call-report-service/src/main/resources/input-call_20170726.csv
+    input: src/main/resources/input-call_20170726.csv
     output-monitor: ../output/output_monitor.csv
     output-cdr: ../output/output_cdr.csv
