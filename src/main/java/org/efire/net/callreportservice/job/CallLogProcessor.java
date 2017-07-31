@@ -15,11 +15,11 @@ import java.time.LocalTime;
 public class CallLogProcessor implements ItemProcessor<CallReport, CallReport> {
     private static final Logger LOG = LoggerFactory.getLogger(CallLogProcessor.class);
     @Override
-    public CallReport process(CallReport sourceCallLog) throws Exception {
+    public CallReport process(CallReport callReport) throws Exception {
         LocalTime initTime = LocalTime.of(00,00,00);
-        sourceCallLog.setDuration(initTime.plusHours(sourceCallLog.getHours())
-                .plusMinutes(sourceCallLog.getMinutes())
-                .plusSeconds(sourceCallLog.getSeconds()));
-        return sourceCallLog;
+        callReport.setDuration(initTime.plusHours(callReport.getHours())
+                .plusMinutes(callReport.getMinutes())
+                .plusSeconds(callReport.getSeconds()));
+        return callReport;
     }
 }

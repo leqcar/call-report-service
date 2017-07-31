@@ -23,8 +23,8 @@ public class InputDTOFieldSetMapper implements FieldSetMapper<CallLog> {
         CallLog inputDTO = new CallLog();
         inputDTO.setCallDate(parseDate(fieldSet.readString("Date")));
         inputDTO.setCallTime(parseTime(fieldSet.readString("Time")));
-        inputDTO.setSource(fieldSet.readInt("Source"));
-        inputDTO.setDestination(fieldSet.readLong("Destination"));
+        inputDTO.setSource(fieldSet.readString("Source"));
+        inputDTO.setDestination(fieldSet.readString("Destination"));
         String[] hhmmss = fieldSet.readString("Duration").split(":");
         inputDTO.setHours(Integer.parseInt(hhmmss[0]));
         inputDTO.setMinutes(Integer.parseInt(hhmmss[1]));
@@ -47,9 +47,9 @@ public class InputDTOFieldSetMapper implements FieldSetMapper<CallLog> {
         return dt;
     }
 
-    private LocalTime parseTime(String dateAsString) {
+    private LocalTime parseTime(String timeAsString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-        LocalTime time = LocalTime.parse(dateAsString, formatter);
+        LocalTime time = LocalTime.parse(timeAsString, formatter);
         return time;
     }
 }

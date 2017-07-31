@@ -15,7 +15,7 @@ import java.util.Date;
 @EqualsAndHashCode
 public class CallReport {
     private Date reportDate;
-    private Integer source;
+    private String source;
     private LocalTime duration;
     private Integer hours;
     private Integer minutes;

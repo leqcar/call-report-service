@@ -17,8 +17,8 @@ public class CallLog {
 
     private Date callDate;
     private LocalTime callTime;
-    private Integer source;
-    private Long destination;
+    private String source;
+    private String destination;
     private Integer hours;
     private Integer minutes;
     private Integer seconds;
