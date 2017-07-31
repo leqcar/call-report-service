@@ -43,8 +43,6 @@ public class MonitorJobConfiguration {
 
     @Value("${file.location.input}")
     private String inputFile;
-    //Use for testing..
-    //private static final String INPUT_FILE = "input-call.csv";
 
     @Bean
     public Job monitoringReportJob(JobBuilderFactory jbf) {
@@ -128,7 +126,6 @@ public class MonitorJobConfiguration {
     @Bean
     public ItemReader<CallLog> inputFileReader() {
         FlatFileItemReader<CallLog> reader = new FlatFileItemReader<>();
-        //reader.setResource(new ClassPathResource(INPUT_FILE)); //-->used to test using csv file in the classpath
         reader.setResource(new FileSystemResource(new File(inputFile)));
         reader.setLinesToSkip(1);
         reader.setLineMapper(inputDTOLineMapper());
