@@ -11,7 +11,8 @@
             <directory>src/main/resources/bin</directory>
             <outputDirectory>bin</outputDirectory>
             <includes>
-                <include>gd-run.bat</include>
+                <include>gd-cdr.bat</include>
+                <include>gd-monitor.bat</include>
             </includes>
             <fileMode>0755</fileMode>
         </fileSet>
