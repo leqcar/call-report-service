@@ -8,4 +8,4 @@ IF ["%JAVA_HOME%"] EQU [""] (
 )
 
 set FILE_PATH=%1
-%JAVA% -Xms256M -Xmx1024M -jar -Dfile.location.input=%FILE_PATH% -Dmode=cdr ../lib/call-report-service.jar
+%JAVA% -Xms256M -Xmx1024M -jar -Dfile.location.input=%FILE_PATH% -Dmode="cdr" ../lib/call-report-service.jar

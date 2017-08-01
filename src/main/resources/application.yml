@@ -6,7 +6,7 @@ spring:
     username: sa
     password:
 
-mode: monitor
+mode: cdr
 
 logging:
   level:
@@ -17,6 +17,6 @@ logging:
 
 file:
   location:
-    input: src/main/resources/input-call_20170726.csv
+    input: src/main/resources/input-call-min-cdr.csv
     output-monitor: ../output/output_monitor.csv
     output-cdr: ../output/output_cdr.csv
