@@ -9,8 +9,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by DELFIN.TENERIFE on 7/31/2017.
@@ -35,7 +33,7 @@ public class CdrFieldSetMapper implements FieldSetMapper<CallLog> {
     }
 
     private Date parseDate(String dateAsString) {
-        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date dt = null;
         try {
             dt = sdf.parse(dateAsString);
